@@ -1,23 +1,20 @@
 name: CI
 on:
-  # pull_request:
+  # 这个流水线是官方 release 用的，Windows 要 Azure 签名/Authenticode、macOS/iOS 要
+  # Apple 证书、Sentry 要 DSN —— 全部来自 secrets，fork 里没有，push 触发只会全红。
+  # 所以默认关掉自动触发；要手动验证时在 Actions 里点 Run workflow 即可。
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #      - main
+  #      - dev
+  #      - android-fix-action-bug
+  #      - new-design-v2
   #   paths-ignore:
   #     - '**.md'
   #     - 'docs/**'
-  #     - 'test.configs/**'
   #     - '.vscode/'
   #     - 'appcast.xml'
-  push:
-    branches:
-       - main
-       - dev
-       - android-fix-action-bug
-       - new-design-v2 
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.vscode/'
-      - 'appcast.xml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
