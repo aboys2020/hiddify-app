@@ -351,8 +351,16 @@
           "light": "Light mode",
           "black": "Black mode"
         },
-        "enableAnalytics": "Turn on analytics",
-        "enableAnalyticsMsg": "Send analytics and crash reports from your device to help improve the app",
+        "homeWallpaper": {
+          "title": "Home background",
+          "builtin": "Built-in world map",
+          "custom": "Your own picture",
+          "opacity": "Background strength",
+          "reset": "Back to the world map",
+          "tooLarge": "That picture is over 32 MB. Pick a smaller one.",
+          "unreadable": "That file could not be read as a picture."
+        },
+        "enableAnalytics": "Turn on analytics",        "enableAnalyticsMsg": "Send analytics and crash reports from your device to help improve the app",
         "autoIpCheck": "Automatically check connection IP",
         "dynamicNotification": "Display speed in notification",
         "hapticFeedback": "Haptic feedback",

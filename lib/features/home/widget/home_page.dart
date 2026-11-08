@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:hiddify/core/app_info/app_info_provider.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/router/bottom_sheets/bottom_sheets_notifier.dart';
+import 'package:hiddify/features/home/notifier/home_wallpaper_notifier.dart';
 import 'package:hiddify/features/home/widget/connection_button.dart';
 import 'package:hiddify/features/home/widget/local_proxy_hint.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
@@ -21,6 +22,7 @@ class HomePage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final t = ref.watch(translationsProvider).requireValue;
+    final wallpaper = ref.watch(homeWallpaperProvider);
     // final hasAnyProfile = ref.watch(hasAnyProfileProvider);
     final activeProfile = ref.watch(activeProfileProvider);
 
@@ -105,15 +107,19 @@ class HomePage extends HookConsumerWidget {
                         stops: const [0, .5, 1],
                       ),
                 image: DecorationImage(
-                  image: const AssetImage('assets/images/world_map.png'), // Replace with your image path
+                  image: wallpaper.image,
                   fit: BoxFit.cover,
-                  opacity: 0.09,
-                  colorFilter: theme.brightness == Brightness.dark
-                      ? ColorFilter.mode(Colors.white.withValues(alpha: .15), BlendMode.srcIn) //
-                      : ColorFilter.mode(
-                          Colors.grey.withValues(alpha: 1),
-                          BlendMode.srcATop,
-                        ), // Apply white tint in dark mode
+                  opacity: wallpaper.opacity,
+                  // The bundled map is flattened to grey so that it reads as a watermark
+                  // under the button. A picture the user picked keeps its own colours;
+                  // only dark mode lays a scrim over it, to keep the labels on top readable.
+                  colorFilter: wallpaper.isCustom
+                      ? (theme.brightness == Brightness.dark
+                            ? ColorFilter.mode(Colors.black.withValues(alpha: .35), BlendMode.darken)
+                            : null)
+                      : (theme.brightness == Brightness.dark
+                            ? ColorFilter.mode(Colors.white.withValues(alpha: .15), BlendMode.srcIn)
+                            : ColorFilter.mode(Colors.grey.withValues(alpha: 1), BlendMode.srcATop)),
                 ),
               ),
             ),

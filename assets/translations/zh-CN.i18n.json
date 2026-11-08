@@ -341,6 +341,15 @@
           "light": "浅色模式",
           "black": "纯黑模式"
         },
+        "homeWallpaper": {
+          "title": "主页背景",
+          "builtin": "内置世界地图",
+          "custom": "自定义图片",
+          "opacity": "背景强度",
+          "reset": "恢复内置地图",
+          "tooLarge": "这张图片超过 32 MB，换一张小一点的。",
+          "unreadable": "这个文件读不出图片内容。"
+        },
         "enableAnalytics": "开启分析",
         "enableAnalyticsMsg": "从您的设备发送分析数据和崩溃报告，帮助改进应用",
         "autoIpCheck": "自动检查连接 IP",

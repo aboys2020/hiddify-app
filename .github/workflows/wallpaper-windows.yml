@@ -1,0 +1,88 @@
+# 只编 Windows 便携版，不需要任何 secrets（签名/遥测全部关掉）
+#
+# 用法：push 到自己的仓库 -> Actions -> Build Windows (wallpaper) -> Run workflow
+# 产物：Hiddify-Windows-Release.zip（内容就是 build\windows\x64\runner\Release）
+#
+# 为什么另起一个工作流，而不直接用仓库自带的 build.yml：
+#   1) build.yml 是 workflow_call，只能被 release 流水线调用，网页上点不了 Run
+#   2) 它的 Windows 步骤依赖 AZURE_* / WINDOWS_SIGNING_* / SENTRY_DSN 等 secrets，fork 里没有
+#   3) 我们不需要 Inno Setup / MSIX / 代码签名，只要能覆盖安装目录的 Release 树
+name: Build Windows (wallpaper)
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: 'prod = lib/main_prod.dart（与已安装版本一致）；dev = lib/main.dart'
+        type: choice
+        options: [prod, dev]
+        default: prod
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: '3.38.5'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # hiddify-core 子模块走 ssh://git@github.com，fork 里没有 key；
+          # 编译只要它的预编译产物，make windows-libs 会自己下载，所以不拉子模块
+          submodules: false
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Ensure make
+        shell: pwsh
+        run: |
+          if (-not (Get-Command make -ErrorAction SilentlyContinue)) {
+            Write-Host 'make 不在 PATH，用 choco 装'
+            choco install make -y --no-progress
+          }
+          make --version
+
+      - name: Prepare (pub get + codegen + core libs)
+        # common-prepare = get gen translate；windows-libs 下载 hiddify-lib-windows-amd64.tar.gz
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          SENTRY_DSN: ''
+        run: make windows-prepare CHANNEL=$env:CHANNEL SENTRY_DSN=
+
+      - name: Analyze (Dart)
+        # 生成物就位后再 analyze；只让 error 失败，仓库原有的 warning/info 不挡路
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Build release tree
+        # = flutter build windows --release --target lib/main_prod.dart --dart-define sentry_dsn=
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          SENTRY_DSN: ''
+        run: make windows-validate CHANNEL=$env:CHANNEL SENTRY_DSN=
+
+      - name: Check what was built
+        shell: pwsh
+        run: |
+          $p = 'build\windows\x64\runner\Release'
+          if (-not (Test-Path "$p\Hiddify.exe")) { throw "没有产物: $p" }
+          Get-ChildItem $p | Select-Object Name, Length | Format-Table -AutoSize
+          "world_map.png : " + (Get-Item "$p\data\flutter_assets\assets\images\world_map.png").Length + " bytes"
+          "hiddify-core.dll : " + ((Get-Item "$p\hiddify-core.dll" -ErrorAction SilentlyContinue).Length)
+
+      - name: Zip the Release tree
+        shell: pwsh
+        run: Compress-Archive -Path 'build\windows\x64\runner\Release\*' -DestinationPath 'Hiddify-Windows-Release.zip' -Force
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Hiddify-Windows-Release
+          path: Hiddify-Windows-Release.zip
+          retention-days: 7

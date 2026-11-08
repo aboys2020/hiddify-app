@@ -7,6 +7,7 @@ import 'package:hiddify/core/preferences/general_preferences.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
 import 'package:hiddify/core/theme/app_theme_mode.dart';
 import 'package:hiddify/core/theme/theme_preferences.dart';
+import 'package:hiddify/features/home/notifier/home_wallpaper_notifier.dart';
 import 'package:hiddify/features/proxy/active/ip_widget.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -121,7 +122,6 @@ class ThemeModePrefTile extends ConsumerWidget {
 
 class ClosingPrefTile extends ConsumerWidget {
   const ClosingPrefTile({super.key});
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider).requireValue;
@@ -138,6 +138,63 @@ class ClosingPrefTile extends ConsumerWidget {
           await ref.read(Preferences.actionAtClose.notifier).update(selectedAction);
         }
       },
+    );
+  }
+}
+
+/// The picture behind the home page: pick one, dial how strongly it shows, or go back
+/// to the bundled map.
+class HomeWallpaperPrefTile extends ConsumerWidget {
+  const HomeWallpaperPrefTile({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider).requireValue;
+    final strings = t.pages.settings.general.homeWallpaper;
+
+    final wallpaper = ref.watch(homeWallpaperProvider);
+    final opacity = ref.watch(Preferences.homeWallpaperOpacity);
+
+    return Column(
+      children: [
+        ListTile(
+          title: Text(strings.title),
+          subtitle: Text(wallpaper.isCustom ? strings.custom : strings.builtin),
+          leading: const Icon(Icons.wallpaper_rounded),
+          trailing: wallpaper.isCustom
+              ? IconButton(
+                  icon: const Icon(Icons.restart_alt_rounded),
+                  tooltip: strings.reset,
+                  onPressed: () => ref.read(homeWallpaperControllerProvider).clear(),
+                )
+              : const Icon(Icons.chevron_right_rounded),
+          onTap: () async {
+            final result = await ref.read(homeWallpaperControllerProvider).pick();
+            if (!context.mounted) return;
+            final message = switch (result) {
+              HomeWallpaperPickResult.picked || HomeWallpaperPickResult.cancelled => null,
+              HomeWallpaperPickResult.tooLarge => strings.tooLarge,
+              HomeWallpaperPickResult.unreadable => strings.unreadable,
+            };
+            if (message != null) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+            }
+          },
+        ),
+        if (wallpaper.isCustom)
+          ListTile(
+            title: Text(strings.opacity),
+            leading: const Icon(Icons.opacity_rounded),
+            subtitle: Slider(
+              value: opacity,
+              min: .05,
+              max: 1,
+              divisions: 19,
+              label: '${(opacity * 100).round()}%',
+              onChanged: ref.read(Preferences.homeWallpaperOpacity.notifier).update,
+            ),
+          ),
+      ],
     );
   }
 }

@@ -28,6 +28,7 @@ class GeneralPage extends HookConsumerWidget {
         children: [
           const LocalePrefTile(),
           const ThemeModePrefTile(),
+          const HomeWallpaperPrefTile(),
           const EnableAnalyticsPrefTile(),
           SwitchListTile.adaptive(
             title: Text(t.pages.settings.general.autoIpCheck),
