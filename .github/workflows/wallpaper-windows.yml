@@ -17,6 +17,17 @@ on:
         type: choice
         options: [prod, dev]
         default: prod
+  # 推到 main 且动了代码就自己编，不用每次去点 Run workflow。
+  # 只跟这几个路径，改文档/README 不会白跑 20 分钟。
+  push:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'assets/translations/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'windows/**'
+      - '.github/workflows/wallpaper-windows.yml'
 
 permissions:
   contents: read
@@ -53,7 +64,7 @@ jobs:
       - name: Prepare (pub get + codegen + core libs)
         # common-prepare = get gen translate；windows-libs 下载 hiddify-lib-windows-amd64.tar.gz
         env:
-          CHANNEL: ${{ inputs.channel }}
+          CHANNEL: ${{ inputs.channel || 'prod' }}
           SENTRY_DSN: ''
         run: make windows-prepare CHANNEL=$env:CHANNEL SENTRY_DSN=
 
@@ -70,7 +81,7 @@ jobs:
       - name: Build release tree
         # = flutter build windows --release --target lib/main_prod.dart --dart-define sentry_dsn=
         env:
-          CHANNEL: ${{ inputs.channel }}
+          CHANNEL: ${{ inputs.channel || 'prod' }}
           SENTRY_DSN: ''
         run: make windows-validate CHANNEL=$env:CHANNEL SENTRY_DSN=
 
