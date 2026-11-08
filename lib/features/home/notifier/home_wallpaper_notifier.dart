@@ -47,7 +47,7 @@ class HomeWallpaperController with InfraLogger {
   final Ref _ref;
 
   Future<HomeWallpaperPickResult> pick() async {
-    final FilePickerResult? picked;
+    FilePickerResult? picked;
     try {
       picked = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -104,7 +104,8 @@ class HomeWallpaperController with InfraLogger {
       final image = frame.image;
       try {
         final data = await image.toByteData(format: ui.ImageByteFormat.png);
-        return data?.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+        if (data == null) return null;
+        return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
       } finally {
         image.dispose();
       }

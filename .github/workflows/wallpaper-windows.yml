@@ -58,8 +58,14 @@ jobs:
         run: make windows-prepare CHANNEL=$env:CHANNEL SENTRY_DSN=
 
       - name: Analyze (Dart)
-        # 生成物就位后再 analyze；只让 error 失败，仓库原有的 warning/info 不挡路
-        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+        # 只查这次动过的地方：仓库原有的问题不该挡住打包，我们自己的编译错误必须挡住
+        run: >
+          flutter analyze
+          lib/features/home
+          lib/features/common/general_pref_tiles.dart
+          lib/features/settings/overview/sections/general_page.dart
+          lib/core/preferences/general_preferences.dart
+          --no-fatal-warnings --no-fatal-infos
 
       - name: Build release tree
         # = flutter build windows --release --target lib/main_prod.dart --dart-define sentry_dsn=

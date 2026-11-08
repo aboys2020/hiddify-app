@@ -7,7 +7,9 @@ import 'package:flutter/painting.dart';
 /// and the profile card stay readable across it. A picture the user chose themselves
 /// is there because they want to see it, so it starts much stronger and is drawn in
 /// its own colours (the map is flattened to grey, which would ruin a photo).
-@immutable
+///
+/// Every field is final and equality is by value, so a rebuild repaints the background
+/// only when the picture or its strength really changed.
 class HomeWallpaperSpec {
   const HomeWallpaperSpec({required this.image, required this.opacity, required this.isCustom});
 
