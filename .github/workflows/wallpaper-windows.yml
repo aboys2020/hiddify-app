@@ -76,6 +76,11 @@ jobs:
           lib/features/common/general_pref_tiles.dart
           lib/features/settings/overview/sections/general_page.dart
           lib/core/preferences/general_preferences.dart
+          lib/features/app_update
+          lib/features/profile/data/profile_parser.dart
+          lib/features/shortcut/shortcut_wrapper.dart
+          lib/core/router/deep_linking/url_protocol/windows_protocol.dart
+          lib/hiddifycore/core_interface/core_interface_desktop.dart
           --no-fatal-warnings --no-fatal-infos
 
       - name: Build release tree
