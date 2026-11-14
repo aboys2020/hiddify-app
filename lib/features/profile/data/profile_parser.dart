@@ -157,8 +157,11 @@ class ProfileParser with InfraLogger {
     String tempFilePath,
     CancelToken? cancelToken,
   ) => TaskEither.tryCatch(() async {
-    // if (url.startsWith("http://"))
-    //   throw const ProfileFailure.invalidUrl('HTTP is not supported. Please use HTTPS for secure connection.');
+    // A subscription carries the node credentials themselves (uuid, password, reality keys).
+    // Downloaded over plain HTTP they are on the wire for anyone between here and the server.
+    if (url.trim().toLowerCase().startsWith('http://')) {
+      throw const ProfileFailure.invalidUrl('HTTP is not supported. Please use HTTPS for secure connection.');
+    }
 
     final rs = await _httpClient
         .download(

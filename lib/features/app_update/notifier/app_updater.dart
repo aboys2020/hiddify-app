@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:hiddify/core/app_info/app_info_provider.dart';
@@ -111,7 +112,30 @@ class AppUpdater extends _$AppUpdater with AppLogger {
     if (asset.size > 0 && length != asset.size) {
       throw Exception("${asset.name}: got $length of ${asset.size} bytes");
     }
+    await _verifyDigest(asset, file);
     return file;
+  }
+
+  /// The file is about to be run as an installer, so its content has to be the one GitHub
+  /// published, not merely the right number of bytes. A release uploaded before GitHub started
+  /// recording digests has none: that is logged rather than silently trusted, and the caller
+  /// still gets the signature check the platform does on its own.
+  Future<void> _verifyDigest(ReleaseAsset asset, File file) async {
+    final digest = asset.digest;
+    if (digest == null || digest.isEmpty) {
+      loggy.warning("${asset.name}: the release publishes no digest, only the size was checked");
+      return;
+    }
+    const prefix = 'sha256:';
+    if (!digest.toLowerCase().startsWith(prefix)) {
+      throw Exception("${asset.name}: unsupported digest [$digest]");
+    }
+    final expected = digest.substring(prefix.length).toLowerCase();
+    final actual = (await sha256.bind(file.openRead()).first).toString();
+    if (actual != expected) {
+      await file.delete();
+      throw Exception("${asset.name}: sha256 mismatch (got $actual, published $expected)");
+    }
   }
 
   Future<void> _install(InstallKind kind, File file) async {

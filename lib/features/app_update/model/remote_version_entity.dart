@@ -26,7 +26,7 @@ class RemoteVersionEntity with _$RemoteVersionEntity {
 
 /// A file of a release: an installer or a package.
 class ReleaseAsset {
-  const ReleaseAsset({required this.name, required this.url, required this.size});
+  const ReleaseAsset({required this.name, required this.url, required this.size, this.digest});
 
   final String name;
 
@@ -36,10 +36,15 @@ class ReleaseAsset {
   /// Bytes; 0 when the release does not say.
   final int size;
 
-  @override
-  bool operator ==(Object other) =>
-      other is ReleaseAsset && other.name == name && other.url == url && other.size == size;
+  /// The hash GitHub publishes for the uploaded file, as `sha256:<hex>`; null on releases
+  /// uploaded before GitHub started recording it. What was downloaded is checked against
+  /// this before anything runs it.
+  final String? digest;
 
   @override
-  int get hashCode => Object.hash(name, url, size);
+  bool operator ==(Object other) =>
+      other is ReleaseAsset && other.name == name && other.url == url && other.size == size && other.digest == digest;
+
+  @override
+  int get hashCode => Object.hash(name, url, size, digest);
 }

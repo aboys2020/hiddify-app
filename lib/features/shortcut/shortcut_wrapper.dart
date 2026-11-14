@@ -62,7 +62,10 @@ class ShortcutWrapper extends HookConsumerWidget {
             onInvoke: (_) async {
               if (rootNavKey.currentContext != null) {
                 final captureResult = await Clipboard.getData(Clipboard.kTextPlain).then((value) => value?.text ?? '');
-                ref.read(bottomSheetsNotifierProvider.notifier).showAddProfile(url: captureResult);
+                // Whatever sits in the clipboard is as untrusted as a link somebody sent: it is
+                // downloaded and activated in one step, so it goes through the same confirmation
+                // the deep-link path uses.
+                ref.read(bottomSheetsNotifierProvider.notifier).showAddProfile(url: captureResult, triggeredByDeepLink: true);
               }
               return null;
             },

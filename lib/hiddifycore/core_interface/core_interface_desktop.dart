@@ -101,7 +101,9 @@ class CoreInterfaceDesktop extends CoreInterface with InfraLogger {
   final int port;
   static String generateRandomPassword(int length) {
     const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final random = Random();
+    // This guards the local gRPC port: a predictable secret makes the port reachable by other
+    // processes on the machine, so it has to come from a cryptographic source.
+    final random = Random.secure();
     return List.generate(length, (_) => characters[random.nextInt(characters.length)]).join();
   }
 
