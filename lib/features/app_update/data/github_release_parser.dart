@@ -17,12 +17,15 @@ abstract class GithubReleaseParser {
     final assets = [
       for (final asset in json['assets'] as List? ?? const [])
         if (asset case {'name': final String name, 'browser_download_url': final String url})
-          ReleaseAsset(
-            name: name,
-            url: url,
-            size: (asset['size'] as num?)?.toInt() ?? 0,
-            digest: asset['digest'] is String ? asset['digest'] as String : null,
-          ),
+          // An asset is downloaded and then run, so only files GitHub itself serves are kept: a
+          // tampered API response cannot point the updater at some other host, or at http.
+          if (_isTrustedAssetUrl(url))
+            ReleaseAsset(
+              name: name,
+              url: url,
+              size: (asset['size'] as num?)?.toInt() ?? 0,
+              digest: asset['digest'] is String ? asset['digest'] as String : null,
+            ),
     ];
     return RemoteVersionEntity(
       version: match.group(1)!,
@@ -39,8 +42,21 @@ abstract class GithubReleaseParser {
     );
   }
 
-  /// A heading that opens the release's change log: "# Change Logs", "## Changelog",
-  /// "## What's new", "## Highlights" or "## تغییرات".
+  /// Hosts a release asset legitimately comes from: the release page, the API, and the hosts
+  /// GitHub redirects downloads to.
+  static const _trustedAssetHosts = {
+    'github.com',
+    'api.github.com',
+    'objects.githubusercontent.com',
+    'release-assets.githubusercontent.com',
+  };
+
+  static bool _isTrustedAssetUrl(String url) {
+    final uri = Uri.tryParse(url);
+    return uri != null && uri.scheme == 'https' && uri.userInfo.isEmpty && _trustedAssetHosts.contains(uri.host);
+  }
+
+  /// A heading that opens the release's change log: "# Change Logs", "## Changelog",  /// "## What's new", "## Highlights" or "## تغییرات".
   static final _changelogHeading = RegExp(
     r"^(#{1,6})\s*(?:change\s*-?\s*logs?|changes|what'?s\s+new|highlights?|تغییرات)\s*:?\s*#*\s*$",
     caseSensitive: false,

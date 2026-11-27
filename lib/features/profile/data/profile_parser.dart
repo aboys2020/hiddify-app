@@ -184,6 +184,11 @@ class ProfileParser with InfraLogger {
     CancelToken? cancelToken,
     DownloadRetryCallback? onRetry,
   ) => TaskEither.tryCatch(() async {
+    // A subscription carries the node credentials themselves (uuid, password, reality keys).
+    // Downloaded over plain HTTP they are on the wire for anyone between here and the server.
+    if (url.trim().toLowerCase().startsWith('http://')) {
+      throw const ProfileFailure.invalidUrl('HTTP is not supported. Please use HTTPS for secure connection.');
+    }
     final token = cancelToken ?? CancelToken();
     for (var attempt = 1; ; attempt++) {
       try {

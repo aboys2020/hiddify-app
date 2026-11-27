@@ -20,7 +20,10 @@ class WindowsProtocolHandler extends ProtocolHandler {
     final prefix = _regPrefix(scheme);
     final capitalized = scheme[0].toUpperCase() + scheme.substring(1);
     final args = getArguments(arguments).map((a) => _sanitize(a));
-    final cmd = '$exe ${args.join(' ')}';
+    // The exe path must be quoted as well: an unquoted "C:\Program Files\..." is split at the
+    // first space, and Windows then runs C:\Program.exe with the rest as arguments. Anybody who
+    // can drop a file at that path gets to run it for every hiddify:// link.
+    final cmd = '"$exe" ${args.join(' ')}';
 
     if (_regGetString(_hive, '$prefix\\shell\\open\\command', '') == cmd) return;
 

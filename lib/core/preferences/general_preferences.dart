@@ -54,6 +54,15 @@ abstract class Preferences {
 
   static final windowMaximized = PreferencesNotifier.create<bool, bool>("window_maximized", false);
 
+  /// The picture drawn behind the home page, as an absolute path inside the app's data
+  /// directory. Empty means the built-in world map.
+  static final homeWallpaperPath = PreferencesNotifier.create<String, String>("home_wallpaper_path", "");
+
+  /// How strongly that picture shows through the page. The built-in map is a watermark (the home
+  /// page draws it at its own fixed strength); a picture the user picked is meant to be seen, and
+  /// this is how much.
+  static final homeWallpaperOpacity = PreferencesNotifier.create<double, double>("home_wallpaper_opacity", .55);
+
   /// Whether the proxy list shows the sleeping proxies keep top leaves at rest: open at first, then as the
   /// user left it.
   static final showSleepingProxies = PreferencesNotifier.create<bool, bool>("show_sleeping_proxies", true);
